@@ -1,7 +1,4 @@
-use std::rc::Rc;
-
 use space_vector::SpaceVector;
-
 use speedy2d::color::Color;
 use speedy2d::font::{Font, TextLayout, TextOptions};
 use speedy2d::window::{WindowHandler, WindowHelper};
@@ -57,10 +54,8 @@ impl WindowHandler for MyWindowHandler {
         // Limpa a tela
         graphics.clear_screen(Color::WHITE);
         
+        // Posiço inicial do texto
         let mut text_pos = (10.0, 10.0);
-
-        // iterate over pendulums returning it structure and an index
- 
 
         // itera pelos pendulos
         for (i, pendulum) in self.penduluns.iter_mut().enumerate() {
@@ -83,9 +78,6 @@ impl WindowHandler for MyWindowHandler {
             );
 
         }
-
-
-
 
         // Desenha o frame
         helper.request_redraw();
