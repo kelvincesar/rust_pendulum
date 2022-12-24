@@ -1,6 +1,9 @@
+use std::rc::Rc;
+
 use space_vector::SpaceVector;
 
 use speedy2d::color::Color;
+use speedy2d::font::{Font, TextLayout, TextOptions};
 use speedy2d::window::{WindowHandler, WindowHelper};
 use speedy2d::{Graphics2D, Window};
 
@@ -10,17 +13,39 @@ fn main() {
     // Cria janela
     let window = Window::new_centered("Pendulo Simples",(800, 600)).unwrap();
     
-    // Cria hanler para o desenho
-    let handler = MyWindowHandler {
-        pendulum: Pendulum::new(400.0, 0.0, 200.0),
-    };
+
+    // Cria handler dos pendulos
+    let mut handler = MyWindowHandler::new();
+    // Cria pendulos
+    let pendulum = Pendulum::new(400.0, 0.0, 400.0);
+    let pendulum_2 = Pendulum::new(400.0, 0.0, 200.0);
+
+    // Adiciona os pendulos ao handler
+    handler.add(pendulum);
+    handler.add(pendulum_2);
+    
     // Chama loop de renderização
     window.run_loop(handler)
 }
 
 // Gerenciador da janela gráfica
 struct MyWindowHandler {
-    pendulum: Pendulum,
+    penduluns: Vec<Pendulum>,
+    font: Font
+}
+
+impl MyWindowHandler {
+    fn new() -> Self {
+        let font = Font::new(include_bytes!("../assets/economica-regular.ttf")).unwrap();
+        
+        Self {
+            penduluns: Vec::new(),
+            font: font 
+        }
+    }
+    fn add(&mut self, pendulum: Pendulum) {
+        self.penduluns.push(pendulum);
+    }
 }
 
 impl WindowHandler for MyWindowHandler {
@@ -31,12 +56,36 @@ impl WindowHandler for MyWindowHandler {
         ) {
         // Limpa a tela
         graphics.clear_screen(Color::WHITE);
+        
+        let mut text_pos = (10.0, 10.0);
 
-        // Atualiza o pendulo
-        self.pendulum.update();
+        // iterate over pendulums returning it structure and an index
+ 
 
-        // Desenha o pendulo
-        self.pendulum.draw(graphics);
+        // itera pelos pendulos
+        for (i, pendulum) in self.penduluns.iter_mut().enumerate() {
+            // Atualiza o pendulo
+            pendulum.update();
+
+            // Desenha o pendulo
+            pendulum.draw(graphics, Color::BLUE);
+
+            let text = format!("Pêndulo {} - Vel. angular: {:.2} rad/s", i, pendulum.angular_velocity);
+            // Redenriza texto com a aceleração
+            let data = self.font.layout_text(&text, 24.0, TextOptions::new());
+
+            text_pos = (text_pos.0, text_pos.1 + 30.0);
+            // desenha texto logo abaixo do pendulo
+            graphics.draw_text(
+                (text_pos.0, text_pos.1), 
+                Color::BLACK, 
+                &data
+            );
+
+        }
+
+
+
 
         // Desenha o frame
         helper.request_redraw();
@@ -92,7 +141,7 @@ impl Pendulum {
         self.position.add(&self.origin); 
     }
 
-    fn draw(&self, graphics: &mut Graphics2D){
+    fn draw(&self, graphics: &mut Graphics2D, color: Color){
         // Cria haste do pendulo
         graphics.draw_line(
             (self.origin.x, self.origin.y),
@@ -105,7 +154,7 @@ impl Pendulum {
         graphics.draw_circle(
             (self.position.x, self.position.y),
             10.0,
-            Color::BLACK,
+            color,
         );
     }
 }
